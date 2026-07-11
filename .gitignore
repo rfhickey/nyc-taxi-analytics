@@ -1,0 +1,20 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# dbt
+target/
+dbt_packages/
+logs/
+package-lock.yml
+.user.yml
+
+# Local data (rebuilt by the ingestion script)
+data/
+*.duckdb
+*.duckdb.wal
+
+# OS / editor
+.DS_Store
+.vscode/

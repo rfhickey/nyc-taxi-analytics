@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_weather__daily_observations
+    description: >
+      Staged daily weather observations for Central Park, NYC, one row
+      per calendar date.
+    columns:
+      - name: observation_date
+        description: calendar date of the weather observation
+        tests:
+          - unique
+          - not_null
+      - name: temperature_max_c
+        description: maximum daily temperature, in degrees celsius
+      - name: temperature_min_c
+        description: minimum daily temperature, in degrees celsius
+      - name: precipitation_mm
+        description: total daily precipitation, in millimeters
+      - name: snowfall_cm
+        description: total daily snowfall, in centimeters
+      - name: wind_speed_max_kmh
+        description: maximum daily wind speed, in kilometers per hour
+      - name: _loaded_at
+        description: timestamp the row was loaded into the raw schema

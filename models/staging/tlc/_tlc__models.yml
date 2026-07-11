@@ -1,0 +1,97 @@
+version: 2
+
+models:
+  - name: stg_tlc__yellow_trips
+    description: >
+      Staged yellow taxi trip records, one row per trip, with vendor,
+      rate code, and payment type codes decoded into readable labels
+      and monetary columns cast to decimal.
+    columns:
+      - name: vendor_id
+        description: code indicating the tpep provider that supplied the trip record
+      - name: vendor_name
+        description: decoded label for vendor_id
+      - name: pickup_at
+        description: date and time the meter was engaged
+        tests:
+          - not_null
+      - name: dropoff_at
+        description: date and time the meter was disengaged
+        tests:
+          - not_null
+      - name: passenger_count
+        description: number of passengers in the vehicle, entered by the driver
+      - name: trip_distance_miles
+        description: elapsed trip distance in miles reported by the taximeter
+      - name: rate_code_id
+        description: final rate code in effect at the end of the trip
+      - name: rate_code_description
+        description: decoded label for rate_code_id
+      - name: is_store_and_forward
+        description: whether the trip record was held in vehicle memory before sending to the vendor
+      - name: pickup_location_id
+        description: TLC taxi zone in which the taximeter was engaged
+        tests:
+          - not_null
+      - name: dropoff_location_id
+        description: TLC taxi zone in which the taximeter was disengaged
+        tests:
+          - not_null
+      - name: payment_type_id
+        description: numeric code signifying how the passenger paid for the trip
+      - name: payment_type_description
+        description: decoded label for payment_type_id
+        tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - 'Flex fare'
+                  - 'Credit card'
+                  - 'Cash'
+                  - 'No charge'
+                  - 'Dispute'
+                  - 'Unknown'
+                  - 'Voided trip'
+      - name: fare_amount
+        description: time-and-distance fare calculated by the meter
+      - name: extra_amount
+        description: miscellaneous extras and surcharges
+      - name: mta_tax_amount
+        description: tax that is automatically triggered based on the metered rate in use
+      - name: tip_amount
+        description: tip amount, automatically populated for credit card tips
+      - name: tolls_amount
+        description: total amount of all tolls paid in trip
+      - name: improvement_surcharge_amount
+        description: surcharge assessed on trips at the flag drop
+      - name: congestion_surcharge_amount
+        description: total amount collected for the NYS congestion surcharge
+      - name: airport_fee_amount
+        description: fee for pickups at LaGuardia and JFK airports
+      - name: total_amount
+        description: total amount charged to passengers, not including cash tips
+        tests:
+          - not_null
+      - name: source_file
+        description: source parquet filename the row was read from, added at load time
+      - name: _loaded_at
+        description: timestamp the row was loaded into the raw schema
+
+  - name: stg_tlc__taxi_zones
+    description: >
+      Staged TLC taxi zone lookup, one row per taxi zone, mapping
+      location IDs to borough, zone name, and service zone.
+    columns:
+      - name: location_id
+        description: unique identifier for the taxi zone
+        tests:
+          - unique
+          - not_null
+      - name: borough
+        description: NYC borough the taxi zone falls within
+        tests:
+          - not_null
+      - name: zone_name
+        description: name of the taxi zone
+      - name: service_zone
+        description: TLC service zone classification for the taxi zone

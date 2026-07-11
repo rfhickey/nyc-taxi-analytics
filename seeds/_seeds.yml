@@ -1,0 +1,20 @@
+version: 2
+
+seeds:
+  - name: taxi_zone_lookup
+    description: >
+      Official NYC TLC taxi zone lookup table. Static reference data mapping
+      each taxi zone location id to its borough, zone name, and service
+      zone; does not change over time.
+    columns:
+      - name: LocationID
+        description: unique identifier for the taxi zone
+        tests:
+          - unique
+          - not_null
+      - name: Borough
+        description: NYC borough the taxi zone belongs to
+      - name: Zone
+        description: name of the taxi zone
+      - name: service_zone
+        description: service zone classification for the taxi zone (e.g. Yellow Zone, Boro Zone, Airports)

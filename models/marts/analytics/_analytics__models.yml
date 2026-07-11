@@ -1,0 +1,97 @@
+version: 2
+
+models:
+  - name: daily_zone_performance
+    description: >
+      One row per pickup date and pickup taxi zone. Summarizes trip volume,
+      revenue, and average fare, distance, duration, and tip metrics for
+      trips picked up in that zone on that date.
+    columns:
+      - name: pickup_date
+        description: calendar date of pickup, local to the trip
+      - name: pickup_location_id
+        description: TLC taxi zone id where the trip was picked up
+      - name: zone_name
+        description: name of the pickup taxi zone
+      - name: borough
+        description: borough of the pickup taxi zone
+      - name: trip_count
+        description: number of trips picked up in this zone on this date
+      - name: total_revenue
+        description: sum of total_amount across trips picked up in this zone on this date
+      - name: avg_fare_amount
+        description: average fare_amount across trips picked up in this zone on this date
+      - name: avg_trip_distance_miles
+        description: average trip distance in miles across trips picked up in this zone on this date
+      - name: avg_trip_duration_minutes
+        description: average trip duration in minutes across trips picked up in this zone on this date
+      - name: avg_tip_percentage
+        description: average tip percentage across trips picked up in this zone on this date
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - pickup_date
+              - pickup_location_id
+
+  - name: daily_weather_trip_summary
+    description: >
+      One row per calendar date. Joins daily trip volume and revenue to that
+      day's weather observations and calendar attributes.
+    columns:
+      - name: date_day
+        description: calendar date
+        tests:
+          - unique
+          - not_null
+      - name: day_name
+        description: name of the day of week
+      - name: is_weekend
+        description: whether the date falls on a weekend
+      - name: temperature_max_c
+        description: maximum temperature observed on the date, in degrees celsius
+      - name: temperature_min_c
+        description: minimum temperature observed on the date, in degrees celsius
+      - name: precipitation_mm
+        description: total precipitation observed on the date, in millimeters
+      - name: snowfall_cm
+        description: total snowfall observed on the date, in centimeters
+      - name: weather_condition
+        description: categorical bucket derived from snowfall and precipitation (Snow, Heavy rain, Light rain, Dry)
+      - name: trip_count
+        description: number of trips picked up on the date
+      - name: total_revenue
+        description: sum of total_amount across trips picked up on the date
+      - name: avg_trip_distance_miles
+        description: average trip distance in miles across trips picked up on the date
+      - name: avg_tip_percentage
+        description: average tip percentage across trips picked up on the date
+
+  - name: hourly_demand_patterns
+    description: >
+      One row per day-of-week and pickup hour combination. Summarizes
+      recurring trip volume and average fare, distance, and duration for
+      that time slot across the full history of trips.
+    columns:
+      - name: iso_day_of_week
+        description: "ISO day of week number (1 = Monday through 7 = Sunday)"
+      - name: day_name
+        description: name of the day of week
+      - name: is_weekend
+        description: whether the day of week is a weekend
+      - name: pickup_hour
+        description: "hour of day the trip was picked up (0-23)"
+      - name: trip_count
+        description: number of trips picked up in this day-of-week and hour combination
+      - name: avg_total_amount
+        description: average total_amount across trips in this day-of-week and hour combination
+      - name: avg_trip_distance_miles
+        description: average trip distance in miles across trips in this day-of-week and hour combination
+      - name: avg_trip_duration_minutes
+        description: average trip duration in minutes across trips in this day-of-week and hour combination
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - iso_day_of_week
+              - pickup_hour

@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: int_trips__validated
+    description: >
+      Yellow taxi trips after applying data quality filters (valid pickup/dropoff
+      ordering, plausible timestamps, durations, distances, fares, and passenger
+      counts) and de-duplicating records that share the same vendor, pickup and
+      dropoff timestamps, locations, and total amount. Grain: one row per trip.
+    columns:
+      - name: trip_id
+        description: Surrogate key generated from vendor_id, pickup_at, dropoff_at, pickup_location_id, dropoff_location_id, and total_amount.
+        tests:
+          - unique
+          - not_null
+
+  - name: int_trips__enriched_with_zones
+    description: >
+      Validated trips enriched with pickup and dropoff borough and zone names
+      and derived trip metrics (duration in minutes, average speed, and tip
+      percentage). Grain: one row per trip.

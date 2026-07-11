@@ -1,0 +1,66 @@
+name: dbt CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Ingest one month of raw data
+        run: python ingestion/load_raw_data.py --start-month 2025-01 --end-month 2025-01
+
+      - name: Install dbt packages
+        run: dbt deps
+
+      - name: Build and test dbt project
+        run: dbt build --profiles-dir .
+
+      - name: Generate dbt docs
+        run: dbt docs generate --static --profiles-dir .
+
+      - name: Assemble docs site
+        run: |
+          mkdir -p docs_site
+          cp target/static_index.html docs_site/index.html
+
+      - name: Upload docs artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs_site
+
+  deploy-docs:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

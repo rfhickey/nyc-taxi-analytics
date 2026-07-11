@@ -1,0 +1,9 @@
+# Committed intentionally: DuckDB is a local file database, so there are no
+# credentials or secrets here. Run dbt with --profiles-dir . from the repo root.
+nyc_taxi_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: data/nyc_taxi.duckdb
+      threads: 4
