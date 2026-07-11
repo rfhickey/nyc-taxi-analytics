@@ -2,6 +2,8 @@
 
 A portfolio project demonstrating core analytics engineering practice: ingesting data from multiple public sources into a local warehouse, modeling it through a layered dbt lineage (staging, intermediate, marts), enforcing data quality with generic and singular tests, generating documentation, and running the whole pipeline in CI. The stack is intentionally lightweight (DuckDB as the warehouse, Python for ingestion, dbt for transformation) so the project can be cloned and run end to end with no external accounts, credentials, or paid services.
 
+**Live dbt documentation** (models, columns, tests, and the interactive lineage graph), rebuilt and published by CI on every push: https://rfhickey.github.io/nyc-taxi-analytics/
+
 ## Architecture
 
 ```mermaid
