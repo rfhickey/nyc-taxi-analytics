@@ -3,6 +3,7 @@
 setup:
 	python -m venv .venv
 	.venv/bin/pip install -r requirements.txt
+	.venv/bin/pip install --upgrade "mashumaro[msgpack]>=3.15"
 
 ingest:
 	python ingestion/load_raw_data.py --start-month 2025-01 --end-month 2025-03

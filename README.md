@@ -117,6 +117,9 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 # 2. Install Python dependencies (dbt-duckdb, requests)
 pip install -r requirements.txt
 
+# 2b. Work around dbt-core's stale mashumaro pin (see requirements.txt)
+pip install --upgrade "mashumaro[msgpack]>=3.15"
+
 # 3. Load raw data (one quarter of TLC trips + matching weather)
 python ingestion/load_raw_data.py --start-month 2025-01 --end-month 2025-03
 

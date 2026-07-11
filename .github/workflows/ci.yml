@@ -17,16 +17,21 @@ jobs:
       id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: "pip"
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt
+
+      # dbt-core pins mashumaro <3.15, but mashumaro <3.15 crashes dbt at
+      # startup on current Python 3.12 patch releases. See requirements.txt.
+      - name: Work around stale dbt-core mashumaro pin
+        run: pip install --upgrade "mashumaro[msgpack]>=3.15"
 
       - name: Ingest one month of raw data
         run: python ingestion/load_raw_data.py --start-month 2025-01 --end-month 2025-01
