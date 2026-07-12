@@ -17,6 +17,7 @@ Every model change must hold these invariants, adopted from the dblect structura
 ## Auditing
 
 - `make audit` = dbt compile + dblect structural audit; CI also runs it on every push/PR.
+- Typed contracts live in `dblect/` (types.py = Money/Usd domain types; contracts/nyc_taxi.py = per-model keys, grains, constraints, functional dependencies). dblect check loads them automatically; only declare facts that are TRUE, a false declaration becomes a standing finding. `dblect/_stubs/` is generated (gitignored), refresh via `dblect init`. Enums must subclass dblect's UnitEnum/NominalEnum, not plain StrEnum.
 - dblect is pre-alpha: installed from git pinned to commit 3fc46a4, with pyyaml added explicitly (missing from its declared deps). If bumping the pin, re-run the full audit and update docs/structural_hazards.md.
 - Full audit record (2026-07-11, 8 findings, all resolved or accepted): docs/structural_hazards.md.
 

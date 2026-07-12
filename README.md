@@ -4,6 +4,12 @@ A portfolio project demonstrating core analytics engineering practice: ingesting
 
 **Live dbt documentation** (models, columns, tests, and the interactive lineage graph), rebuilt and published by CI on every push: https://rfhickey.github.io/nyc-taxi-analytics/
 
+**Live analytics dashboard** built from the marts (demand heatmap, weather effects, zone rankings, speed and tipping patterns), published on the same site: https://rfhickey.github.io/nyc-taxi-analytics/dashboard.html
+
+![dbt docs lineage graph](docs/images/dbt_lineage_graph.png)
+
+*The lineage graph from the published dbt docs: sources (green) through staging, intermediate, and marts, with the singular tests attached where they run.*
+
 ## Architecture
 
 ```mermaid
@@ -90,7 +96,12 @@ flowchart LR
 ├── macros/
 │   └── generate_schema_name.sql
 ├── docs/
-│   └── structural_hazards.md       # structural hazard catalog, audit, design rules
+│   ├── structural_hazards.md       # structural hazard catalog, audit, design rules
+│   ├── dashboard.html              # analytics dashboard published to Pages
+│   └── images/                     # README figures (lineage graph)
+├── dblect/
+│   ├── types.py                    # Money/Usd domain types
+│   └── contracts/nyc_taxi.py       # per-model keys, grains, constraints, dependencies
 ├── tests/                          # singular tests
 ├── data/
 │   └── nyc_taxi.duckdb             # local DuckDB warehouse (generated, gitignored)
@@ -167,7 +178,8 @@ To enable the docs deployment, set the repository's Pages source to **GitHub Act
 
 - **Layered modeling**: a clean staging, intermediate, marts separation with consistent materialization and naming conventions per layer.
 - **Data quality testing**: generic and singular tests covering uniqueness, referential integrity, accepted values, and business-rule reconciliation between fact and aggregate tables.
-- **Structural hazard testing**: static structural analysis (dblect) in CI plus audited guards against silent row drops, nondeterministic dedup, NULL category collapse, and join fanout, documented in `docs/structural_hazards.md`.
+- **Structural hazard testing**: static structural analysis (dblect) in CI, typed model contracts (domain types, grains, functional dependencies), and audited guards against silent row drops, nondeterministic dedup, NULL category collapse, and join fanout, documented in `docs/structural_hazards.md`.
+- **Analytics delivery**: an interactive dashboard built directly from the marts, published alongside the dbt docs, with every headline claim verified against the warehouse.
 - **Multi-source ingestion**: combining a remote parquet CDN, a public JSON API, and a static reference seed into one warehouse.
 - **Idempotent pipelines**: ingestion uses `CREATE OR REPLACE` so re-running any load is safe and produces the same result.
 - **Documentation**: full `dbt docs` generation including the lineage graph in this README, published automatically in CI.

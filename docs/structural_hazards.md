@@ -53,6 +53,29 @@ Method, in order:
 
 After the fixes: `dbt build` passes 45 tests with 1 intended warning (finding 1's signal test, currently flagging 3 conflicting duplicate groups), all 92 trip dates appear in the weather summary (previously 90), and `dblect check .` remains at 0 findings.
 
+## The typed contract layer
+
+Beyond the structural audit, dblect supports Pydantic-flavored declarations that
+state semantics the SQL and yml cannot express to a machine. This project declares
+them under `dblect/` (loaded automatically by `dblect check`):
+
+- `dblect/types.py` defines a `Money` domain type with a `Currency` unit enum;
+  the `Usd` refinement types every monetary column (fares, tips, tolls, totals,
+  revenue) so amount columns carry their meaning through column-level lineage.
+- `dblect/contracts/nyc_taxi.py` declares one `ModelContract` per typed model:
+  primary keys (`trip_id`, `date_day`, `location_id`, `observation_date`),
+  foreign keys mirroring the dbt relationships tests, grain facts for the
+  aggregate marts, value constraints (non-negative precipitation, hour in 0..23),
+  and the functional dependencies that actually hold: decoded labels follow their
+  codes, zone attributes follow the zone id, and calendar attributes follow the
+  ISO day number.
+
+As of the audited commit this resolves 8 contracts with 9 domain-typed columns
+and functional-dependency information on 5 models, all with zero findings. The
+declarations are facts the analyzer grounds its reasoning in; a future model
+change that contradicts one (a fanout that breaks a grain, a join that mixes
+meanings) surfaces as a finding instead of a silent drift.
+
 ## Running the audit
 
 Locally (requires [uv](https://docs.astral.sh/uv/); dblect is pre-alpha and not on PyPI, so it is pinned to the audited commit, and `pyyaml` is added because dblect does not yet declare it):
