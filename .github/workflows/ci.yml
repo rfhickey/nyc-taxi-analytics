@@ -45,6 +45,16 @@ jobs:
       - name: Generate dbt docs
         run: dbt docs generate --static --profiles-dir .
 
+      # dblect is pre-alpha and not on PyPI, so it is pinned to the commit this
+      # project was audited against; pyyaml is a runtime dependency dblect does
+      # not yet declare. Runs after docs generate so manifest.json and
+      # catalog.json both exist. Fails the build on warn-or-worse findings.
+      # See docs/structural_hazards.md.
+      - name: Structural hazard audit (dblect)
+        run: |
+          pip install pyyaml "dblect @ git+https://github.com/dvryaboy/dblect@3fc46a44a763667c47b02117147aa653ca9d4334"
+          dblect check .
+
       - name: Assemble docs site
         run: |
           mkdir -p docs_site

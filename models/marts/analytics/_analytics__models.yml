@@ -26,7 +26,11 @@ models:
       - name: avg_trip_duration_minutes
         description: average trip duration in minutes across trips picked up in this zone on this date
       - name: avg_tip_percentage
-        description: average tip percentage across trips picked up in this zone on this date
+        description: >
+          average tip percentage across trips picked up in this zone on this
+          date. Only credit card tips are recorded in the source data, so
+          zones with a high cash or Flex fare share read artificially low;
+          this partly measures payment mix, not tipping behavior.
     tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -36,8 +40,10 @@ models:
 
   - name: daily_weather_trip_summary
     description: >
-      One row per calendar date. Joins daily trip volume and revenue to that
-      day's weather observations and calendar attributes.
+      One row per calendar date that has at least one trip. Joins daily trip
+      volume and revenue to that day's weather observations and calendar
+      attributes. Weather columns are null and weather_condition is 'Unknown'
+      on trip days with no weather observation.
     columns:
       - name: date_day
         description: calendar date
@@ -57,7 +63,20 @@ models:
       - name: snowfall_cm
         description: total snowfall observed on the date, in centimeters
       - name: weather_condition
-        description: categorical bucket derived from snowfall and precipitation (Snow, Heavy rain, Light rain, Dry)
+        description: >
+          categorical bucket derived from snowfall and precipitation (Snow,
+          Heavy rain, Light rain, Dry). 'Dry' requires an actual zero
+          precipitation measurement; days with missing observations are
+          'Unknown' rather than being lumped in with dry days.
+        tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - 'Snow'
+                  - 'Heavy rain'
+                  - 'Light rain'
+                  - 'Dry'
+                  - 'Unknown'
       - name: trip_count
         description: number of trips picked up on the date
       - name: total_revenue
@@ -65,13 +84,18 @@ models:
       - name: avg_trip_distance_miles
         description: average trip distance in miles across trips picked up on the date
       - name: avg_tip_percentage
-        description: average tip percentage across trips picked up on the date
+        description: >
+          average tip percentage across trips picked up on the date. Only
+          credit card tips are recorded in the source data, so this partly
+          reflects payment mix rather than tipping behavior.
 
   - name: hourly_demand_patterns
     description: >
       One row per day-of-week and pickup hour combination. Summarizes
-      recurring trip volume and average fare, distance, and duration for
-      that time slot across the full history of trips.
+      recurring trip volume and average fare, distance, and duration for that
+      time slot across all trips whose pickup date is covered by the dim_dates
+      spine (the relationships test on fct_trips.pickup_date guarantees full
+      coverage and fails loudly if the spine is ever exhausted).
     columns:
       - name: iso_day_of_week
         description: "ISO day of week number (1 = Monday through 7 = Sunday)"

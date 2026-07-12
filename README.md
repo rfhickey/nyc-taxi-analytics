@@ -89,6 +89,8 @@ flowchart LR
 │       └── analytics/             # daily_zone_performance, daily_weather_trip_summary, hourly_demand_patterns
 ├── macros/
 │   └── generate_schema_name.sql
+├── docs/
+│   └── structural_hazards.md       # structural hazard catalog, audit, design rules
 ├── tests/                          # singular tests
 ├── data/
 │   └── nyc_taxi.duckdb             # local DuckDB warehouse (generated, gitignored)
@@ -147,6 +149,14 @@ dbt docs serve --profiles-dir .
 
 Run the full suite with `dbt build --profiles-dir .`, or tests only with `dbt test --profiles-dir .`.
 
+## Structural hazard testing
+
+Beyond value-level data tests, the project is audited for **structural hazards**: transformation bugs that survive a green build because the SQL is valid and every test passes while the meaning of a column quietly shifts (silent row drops from inner joins, nondeterministic window tie-breaks, NULLs collapsing into real categories, join fanout, date-spine time bombs). The approach follows Dmitriy Ryaboy's [dblect](https://github.com/dvryaboy/dblect) and the ideas in [Testing dbt for structural hazards](https://medium.com/@squarecog/testing-dbt-for-structural-hazards-or-introducing-dblect-f9a4a7a0c34c).
+
+- `make audit` runs the dblect structural audit locally, and CI runs it on every push and pull request.
+- [docs/structural_hazards.md](docs/structural_hazards.md) documents the hazard catalog, how each model guards against it, the full audit findings with resolutions, and design rules for new models.
+- The guards are encoded in the pipeline itself: relationships tests on both zone joins and on the date spine, deterministic dedup tie-breaking with a warn-severity test that surfaces conflicting duplicates, an explicit 'Unknown' weather bucket, and grain descriptions that match what the SQL guarantees.
+
 ## CI
 
 A GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push to `main` and on every pull request. It installs dependencies, ingests one month of data, and runs `dbt build` end to end so the whole pipeline (ingestion, staging, intermediate, marts, and every test) is exercised on each change. On pushes to `main`, a second job publishes the generated dbt docs site to GitHub Pages.
@@ -157,6 +167,7 @@ To enable the docs deployment, set the repository's Pages source to **GitHub Act
 
 - **Layered modeling**: a clean staging, intermediate, marts separation with consistent materialization and naming conventions per layer.
 - **Data quality testing**: generic and singular tests covering uniqueness, referential integrity, accepted values, and business-rule reconciliation between fact and aggregate tables.
+- **Structural hazard testing**: static structural analysis (dblect) in CI plus audited guards against silent row drops, nondeterministic dedup, NULL category collapse, and join fanout, documented in `docs/structural_hazards.md`.
 - **Multi-source ingestion**: combining a remote parquet CDN, a public JSON API, and a static reference seed into one warehouse.
 - **Idempotent pipelines**: ingestion uses `CREATE OR REPLACE` so re-running any load is safe and produces the same result.
 - **Documentation**: full `dbt docs` generation including the lineage graph in this README, published automatically in CI.

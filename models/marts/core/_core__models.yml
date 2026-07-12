@@ -22,18 +22,42 @@ models:
                 field: location_id
       - name: dropoff_location_id
         description: TLC taxi zone id where the trip ended.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_zones')
+                field: location_id
       - name: pickup_at
         description: Timestamp the trip started.
       - name: dropoff_at
         description: Timestamp the trip ended.
       - name: pickup_date
         description: Calendar date of pickup_at.
+        tests:
+          # guards the dim_dates spine boundary: marts inner-join dim_dates, so
+          # a pickup date outside the spine would silently vanish from them.
+          # this test turns spine exhaustion into a loud failure instead.
+          - relationships:
+              arguments:
+                to: ref('dim_dates')
+                field: date_day
       - name: trip_distance_miles
         description: Distance of the trip in miles as reported by the meter.
       - name: fare_amount
         description: Base metered fare amount.
       - name: tip_amount
-        description: Tip amount paid on the trip.
+        description: >
+          Tip amount recorded for the trip. Only credit card tips are captured
+          by the TLC feed; cash tips are not recorded and appear as zero, so
+          this is a payment-channel artifact, not a measure of actual tipping.
+      - name: tip_percentage
+        description: >
+          tip_amount as a percentage of fare_amount. Because only credit card
+          tips are recorded, this is structurally near zero for cash and Flex
+          fare trips regardless of real tipping behavior; filter to
+          payment_type_description = 'Credit card' before averaging or
+          comparing across segments.
       - name: total_amount
         description: Total amount charged to passengers for the trip.
 

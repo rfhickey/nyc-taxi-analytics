@@ -1,4 +1,4 @@
-.PHONY: setup ingest build docs clean
+.PHONY: setup ingest build docs audit clean
 
 setup:
 	python -m venv .venv
@@ -13,6 +13,13 @@ build:
 
 docs:
 	dbt docs generate --profiles-dir . && dbt docs serve --profiles-dir .
+
+# structural hazard audit (see docs/structural_hazards.md); requires uv.
+# dblect is pre-alpha: pinned to the audited commit, pyyaml added because
+# dblect does not yet declare it
+audit:
+	dbt compile --profiles-dir .
+	uvx --python 3.12 --with pyyaml --from git+https://github.com/dvryaboy/dblect@3fc46a44a763667c47b02117147aa653ca9d4334 dblect check .
 
 clean:
 	dbt clean && rm -rf data
